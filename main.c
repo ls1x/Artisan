@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <errno.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -15,15 +17,28 @@
 int main(int argc, char * argv[]){
     int c = 0;
     char *addressC = NULL;
-    char *portC = NULL;
+    char *portC;
+    bool isPortRange = false;
 
-    while ((c = getopt(argc,argv,"h:p:")) != -1){
+    static struct option long_options[] = {
+    { "help", 0, NULL, 'h' },
+    { "range", 2, NULL, 'r' },
+    { 0, 0, 0, 0}};
+
+
+    while ((c = getopt_long(argc,argv,"ht:p:",long_options, NULL)) != -1){
         switch (c){
             case 'h':
+                print_help(argv);
+                return 0;
+            case 't':
                 addressC = optarg;
                 break;
             case 'p':
                 portC = optarg;
+                break;
+            case 'r':
+                isPortRange = true;
                 break;
             case '?':
                 break;
@@ -34,49 +49,68 @@ int main(int argc, char * argv[]){
     }
 
     if (addressC && portC){
-        int port = 0;
+        int port[2] = {0};
+        int *openPorts = NULL;
+        int sizeOut = 0;
         char *endptr = NULL;
         
-        errno = 0;
-        port = strtol(portC, &endptr, 10);
-        if (errno != 0){
-            printf("Something went wrong when converting the port from string to int");
-            perror("strtol");
-            return -1;
-        }
-
-        // Socket and Address
+        // Socket Structure
         int clientSocket = 0;
-        clientSocket = socket(AF_INET,SOCK_STREAM, 0);
-
-        // Remote Address
         struct sockaddr_in serverAddress = {0};
-        serverAddress.sin_family = AF_INET;
-        serverAddress.sin_port = htons(port);
-        inet_pton(AF_INET, addressC, &(serverAddress.sin_addr));
-
-        int conn = connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
-        if(conn == -1){
-            printf("Something went wrong when trying to connect.\n");
-            perror("perror");
+        int buildstruct = build_sock_struct(&clientSocket, &serverAddress, port[0], addressC);
+        if (buildstruct == -1){
+            printf("Something went wrong when building the socket structure.\n");
             return -1;
         }
         
-        // For testing purposes: HTTP
-        char request[] = "GET / HTTP/1.1\r\n\r\n"; //Change this
-        char response[4096] = {0};
+        if (isPortRange == true){
+            errno = 0;
+            port[0] = strtol(strtok(portC,"-"), &endptr, 10);
+            if (errno != 0){
+                printf("Something went wrong when converting the port from string to int.\n");
+                perror("Strtol");
+                return -1;
+            }
+            port[1] = strtol(strtok(NULL,"-"), &endptr, 10);
+            if (errno != 0){
+                printf("Something went wrong when converting the port from string to int.\n");
+            }
+            // Scan the range of ports
+            openPorts = port_scan(clientSocket, serverAddress, port[0], port[1], &sizeOut);
+        
+        } else {
+            port[0] = strtol(strtok(portC,"-"), &endptr, 10);
+            if (errno != 0){
+                printf("Something went wrong when converting the port from string to int.\n");
+                perror("Strtol");
+                return -1;
+            }
+            openPorts = port_scan(clientSocket, serverAddress, port[0], port[1], &sizeOut);
+        }
+        
+        /* Tasks:
+         * - [ ] Ainda dá connection refused, mesmo a porta aparecendo como open
+         * - [x] FIXED: Memory leaks
+         */
 
-        send(clientSocket, request, sizeof(request), 0);
-        recv(clientSocket, &response, sizeof(response), 0);
-
-        printf("[SERVER]: %s\n", response);
+        sleep(3);
+        for (int i = 0; i < sizeOut; i++){
+            int request = send_request(clientSocket, openPorts[i]);
+            if (request == -1){
+                // send_request should be void.
+                // perror is not needed here
+            }
+        }
+        
+        // Cleanup
         close(clientSocket);
+        free(openPorts);
 
     } else {
         printf("IP Address and Port are required values.\n");
         print_usage(argv);
         return 0;
     }
-    
+   
     return 0;
 }
