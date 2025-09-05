@@ -15,5 +15,6 @@ To compile the project, use `gcc`:
 - `gcc main.c functions.c -o artisan`
 
 ### Usage
-- `./artisan -h <IP> -p <PORT>`
-- `./artisan -h 127.0.0.1 -p 80`
+- `./Artisan.out [-h], [--help]: Prints this.`
+- `./Artisan.out [-t <TARGET>] [-p <PORT>]: Scans selected TCP port.`
+- `./Artisan.out [-t <TARGET>] [-p <START-END>] [--range]: Scans selected range of TCP ports`
