@@ -52,6 +52,7 @@ int main(int argc, char * argv[]){
         int port[2] = {0};
         int *openPorts = NULL;
         int sizeOut = 0;
+        char * strtoked_port = NULL;
         char *endptr = NULL;
         
         // Socket Structure
@@ -65,21 +66,38 @@ int main(int argc, char * argv[]){
         
         if (isPortRange == true){
             errno = 0;
-            port[0] = strtol(strtok(portC,"-"), &endptr, 10);
+            strtoked_port = strtok(portC,"-");
+            if (strtoked_port == NULL){
+                printf("[ERR]: Incorrectly typed range of ports.\n");
+                close(clientSocket);
+                return -1;
+            }
+            port[0] = strtol(strtoked_port, &endptr, 10);
             if (errno != 0){
                 printf("Something went wrong when converting the port from string to int.\n");
                 perror("Strtol");
                 return -1;
             }
-            port[1] = strtol(strtok(NULL,"-"), &endptr, 10);
+            strtoked_port = strtok(NULL,"-");
+            if (strtoked_port == NULL){
+                printf("[ERR]: Incorrectly typed range of ports.\n");
+                close(clientSocket);
+                return -1;
+            }
+            port[1] = strtol(strtoked_port, &endptr, 10);
             if (errno != 0){
                 printf("Something went wrong when converting the port from string to int.\n");
+            }
+            if (port[0] > 65535 || port[1] > 65535){
+                printf("Ports cannot be higher than 65535.\n");
+                close(clientSocket);
+                return -1;
             }
             // Scan the range of ports
             openPorts = port_scan(clientSocket, serverAddress, port[0], port[1], &sizeOut);
         
         } else {
-            port[0] = strtol(strtok(portC,"-"), &endptr, 10);
+            port[0] = strtol(portC, &endptr, 10);
             if (errno != 0){
                 printf("Something went wrong when converting the port from string to int.\n");
                 perror("Strtol");
