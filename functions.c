@@ -61,7 +61,7 @@ int send_request(int clientSocket, int port){
             return -1;
         }
 
-        printf("[SERVER]: %s\n", response);
+        printf("[SERVER]: %s", response);
         close(clientSocket);
     }
 }
@@ -86,15 +86,20 @@ int build_sock_struct(int * clientSocketOut, struct sockaddr_in * AddressOut, in
 
 int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int lastPort, int * sizeOut){
     serverAddress.sin_port = htons(firstPort);
-    int * openPorts = calloc(1, sizeof(int)); 
+    int * openPorts = calloc(1, sizeof(int));
+    if (openPorts == NULL){
+        printf("The allocator failed.\n");
+    }
     int j = 0;
+    int conn = 0;
 
     if (lastPort > 0){
         for (int i = firstPort; i <= lastPort; i++){
             serverAddress.sin_port = htons(i);
-            int conn = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+            conn = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
             if (conn == -1){
                 printf("[CLOSED/FILTERED]: %d\n", i);
+                errno = 0;
             } else {
                 if (j > 0){
                     int *temp = openPorts;
@@ -112,9 +117,10 @@ int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int
             }
         }
     } else {
-        int conn = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+        conn = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
         if (conn == -1){
             printf("[CLOSED/FILTERED]: %d\n", firstPort);
+            errno = 0;
         } else {
             openPorts[j] = firstPort;
             j++;
@@ -124,5 +130,3 @@ int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int
     *sizeOut = j;
     return openPorts;
 }
-
-

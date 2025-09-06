@@ -88,12 +88,6 @@ int main(int argc, char * argv[]){
             openPorts = port_scan(clientSocket, serverAddress, port[0], port[1], &sizeOut);
         }
         
-        /* Tasks:
-         * - [ ] Ainda dá connection refused, mesmo a porta aparecendo como open
-         * - [x] FIXED: Memory leaks
-         */
-
-        sleep(3);
         for (int i = 0; i < sizeOut; i++){
             int request = send_request(clientSocket, openPorts[i]);
             if (request == -1){
