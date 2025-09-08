@@ -61,7 +61,7 @@ int send_request(int clientSocket, int port){
             return -1;
         }
 
-        printf("[SERVER]: %s", response);
+        printf("[SERVER]: %s\n", response);
         close(clientSocket);
     }
 }
