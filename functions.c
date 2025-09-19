@@ -84,6 +84,10 @@ int build_sock_struct(int * clientSocketOut, struct sockaddr_in * AddressOut, in
     return 0;
 }
 
+void sleep_ms (int ms){
+    usleep(ms * 1000);
+}
+
 int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int lastPort, int * sizeOut){
     serverAddress.sin_port = htons(firstPort);
     int * openPorts = calloc(1, sizeof(int));
@@ -115,6 +119,8 @@ int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int
                 j++;
                 printf("[OPEN]: %d\n", i);
             }
+            // Sleep Here
+            sleep_ms(10);
         }
     } else {
         conn = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));

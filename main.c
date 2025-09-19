@@ -60,7 +60,7 @@ int main(int argc, char * argv[]){
         struct sockaddr_in serverAddress = {0};
         int buildstruct = build_sock_struct(&clientSocket, &serverAddress, port[0], addressC);
         if (buildstruct == -1){
-            printf("Something went wrong when building the socket structure.\n");
+            printf("[ERR]: Something went wrong when building the socket structure.\n");
             return -1;
         }
         
@@ -74,7 +74,7 @@ int main(int argc, char * argv[]){
             }
             port[0] = strtol(strtoked_port, &endptr, 10);
             if (errno != 0){
-                printf("Something went wrong when converting the port from string to int.\n");
+                printf("[ERR]: Something went wrong when converting the port from string to int.\n");
                 perror("Strtol");
                 return -1;
             }
@@ -86,10 +86,10 @@ int main(int argc, char * argv[]){
             }
             port[1] = strtol(strtoked_port, &endptr, 10);
             if (errno != 0){
-                printf("Something went wrong when converting the port from string to int.\n");
+                printf("[ERR]: Something went wrong when converting the port from string to int.\n");
             }
             if (port[0] > 65535 || port[1] > 65535){
-                printf("Ports cannot be higher than 65535.\n");
+                printf("[ERR]: Ports cannot be higher than 65535.\n");
                 close(clientSocket);
                 return -1;
             }
@@ -99,13 +99,15 @@ int main(int argc, char * argv[]){
         } else {
             port[0] = strtol(portC, &endptr, 10);
             if (errno != 0){
-                printf("Something went wrong when converting the port from string to int.\n");
+                printf("[ERR]: Something went wrong when converting the port from string to int.\n");
                 perror("Strtol");
                 return -1;
             }
+            // Scan a single port
             openPorts = port_scan(clientSocket, serverAddress, port[0], port[1], &sizeOut);
         }
         
+        // Sending Requests
         for (int i = 0; i < sizeOut; i++){
             int request = send_request(clientSocket, openPorts[i]);
             if (request == -1){
@@ -119,7 +121,7 @@ int main(int argc, char * argv[]){
         free(openPorts);
 
     } else {
-        printf("IP Address and Port are required values.\n");
+        printf("[ERR]: IP Address and Port are required values.\n");
         print_usage(argv);
         return 0;
     }
