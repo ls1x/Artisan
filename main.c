@@ -19,6 +19,7 @@ int main(int argc, char * argv[]){
     char *addressC = NULL;
     char *portC;
     bool isPortRange = false;
+    bool isVerbose = false;
 
     static struct option long_options[] = {
     { "help", 0, NULL, 'h' },
@@ -26,7 +27,7 @@ int main(int argc, char * argv[]){
     { 0, 0, 0, 0}};
 
 
-    while ((c = getopt_long(argc,argv,"ht:p:",long_options, NULL)) != -1){
+    while ((c = getopt_long(argc,argv,"ht:p:v",long_options, NULL)) != -1){
         switch (c){
             case 'h':
                 print_help(argv);
@@ -40,6 +41,8 @@ int main(int argc, char * argv[]){
             case 'r':
                 isPortRange = true;
                 break;
+            case 'v':
+                isVerbose = true;
             case '?':
                 break;
 
@@ -55,21 +58,11 @@ int main(int argc, char * argv[]){
         char * strtoked_port = NULL;
         char *endptr = NULL;
         
-        // Socket Structure
-        int clientSocket = 0;
-        struct sockaddr_in serverAddress = {0};
-        int buildstruct = build_sock_struct(&clientSocket, &serverAddress, port[0], addressC);
-        if (buildstruct == -1){
-            printf("[ERR]: Something went wrong when building the socket structure.\n");
-            return -1;
-        }
-        
         if (isPortRange == true){
             errno = 0;
             strtoked_port = strtok(portC,"-");
             if (strtoked_port == NULL){
                 printf("[ERR]: Incorrectly typed range of ports.\n");
-                close(clientSocket);
                 return -1;
             }
             port[0] = strtol(strtoked_port, &endptr, 10);
@@ -81,7 +74,6 @@ int main(int argc, char * argv[]){
             strtoked_port = strtok(NULL,"-");
             if (strtoked_port == NULL){
                 printf("[ERR]: Incorrectly typed range of ports.\n");
-                close(clientSocket);
                 return -1;
             }
             port[1] = strtol(strtoked_port, &endptr, 10);
@@ -90,12 +82,10 @@ int main(int argc, char * argv[]){
             }
             if (port[0] > 65535 || port[1] > 65535){
                 printf("[ERR]: Ports cannot be higher than 65535.\n");
-                close(clientSocket);
                 return -1;
             }
             // Scan the range of ports
-            openPorts = port_scan(clientSocket, serverAddress, port[0], port[1], &sizeOut);
-        
+            openPorts = port_scan(addressC, port[0], port[1], &sizeOut, isVerbose);
         } else {
             port[0] = strtol(portC, &endptr, 10);
             if (errno != 0){
@@ -104,10 +94,11 @@ int main(int argc, char * argv[]){
                 return -1;
             }
             // Scan a single port
-            openPorts = port_scan(clientSocket, serverAddress, port[0], port[1], &sizeOut);
+            openPorts = port_scan(addressC, port[0], port[1], &sizeOut, isVerbose);
         }
         
         // Sending Requests
+    /*
         for (int i = 0; i < sizeOut; i++){
             int request = send_request(clientSocket, openPorts[i]);
             if (request == -1){
@@ -115,9 +106,8 @@ int main(int argc, char * argv[]){
                 // perror is not needed here
             }
         }
-        
+     */   
         // Cleanup
-        close(clientSocket);
         free(openPorts);
 
     } else {

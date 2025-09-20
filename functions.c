@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -20,7 +21,9 @@ void print_help(char * argv[]){
     printf("Artisan - TCP Port Scanner\n");
     printf("%s [-h], [--help]: Prints this.\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <PORT>]: Scans selected TCP port.\n", argv[0]);
+    printf("%s [-t <TARGET>] [-p <PORT>] [-v]: Verbose Scan.\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <START-END>] [--range]: Scans selected range of TCP ports.\n", argv[0]);
+
 }
 
 int send_request(int clientSocket, int port){
@@ -88,8 +91,10 @@ void sleep_ms (int ms){
     usleep(ms * 1000);
 }
 
-int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int lastPort, int * sizeOut){
-    serverAddress.sin_port = htons(firstPort);
+int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * sizeOut, bool isVerbose){
+    int clientSocket = 0;
+    struct sockaddr_in serverAddress = {0};
+    int buildstruct = 0;
     int * openPorts = calloc(1, sizeof(int));
     if (openPorts == NULL){
         printf("The allocator failed.\n");
@@ -99,10 +104,13 @@ int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int
 
     if (lastPort > 0){
         for (int i = firstPort; i <= lastPort; i++){
-            serverAddress.sin_port = htons(i);
-            conn = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+            // Open Socket for each attempt, close the socket independently of the result.
+            buildstruct = build_sock_struct(&clientSocket, &serverAddress, i, serverAddress_char);
+            conn = connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
             if (conn == -1){
-                printf("[CLOSED/FILTERED]: %d\n", i);
+                if (isVerbose == true){
+                    printf("[CLOSED/FILTERED]: %d\n", i);
+                }
                 errno = 0;
             } else {
                 if (j > 0){
@@ -120,10 +128,10 @@ int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int
                 printf("[OPEN]: %d\n", i);
             }
             // Sleep Here
-            sleep_ms(10);
+            close(clientSocket);
         }
     } else {
-        conn = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+        conn = connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
         if (conn == -1){
             printf("[CLOSED/FILTERED]: %d\n", firstPort);
             errno = 0;
@@ -132,6 +140,7 @@ int * port_scan(int sockfd, struct sockaddr_in serverAddress, int firstPort, int
             j++;
             printf("[OPEN]: %d\n", firstPort);
         }
+        close(clientSocket);
     }
     *sizeOut = j;
     return openPorts;
