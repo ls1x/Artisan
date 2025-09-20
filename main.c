@@ -98,15 +98,11 @@ int main(int argc, char * argv[]){
         }
         
         // Sending Requests
-    /*
         for (int i = 0; i < sizeOut; i++){
-            int request = send_request(clientSocket, openPorts[i]);
-            if (request == -1){
-                // send_request should be void.
-                // perror is not needed here
-            }
+            int request = 0;
+            request = send_request(addressC, openPorts[i]);
         }
-     */   
+   
         // Cleanup
         free(openPorts);
 

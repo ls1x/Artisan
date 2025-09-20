@@ -26,47 +26,58 @@ void print_help(char * argv[]){
 
 }
 
-int send_request(int clientSocket, int port){
+int send_request(char * serverAddress_char, int port){
     char request[256] = {0};
     char response[1024] = {0};
-
-    // HTTP    
-    if (port == 80){
-        strncpy(request,"GET / HTTP/1.1\r\n\r\n", sizeof(request));
-        
-        printf("[SEND]: %d\n", port);
-        send(clientSocket, request, sizeof(request), 0);
-        if (errno){
-            perror("Send");
-            return -1;
-        }
-        recv(clientSocket, &response, sizeof(response), 0);
-        if (errno){
-            perror("Recv");
-            return -1;
-        }
-
-        printf("[SERVER]: %s\n", response);
-        close(clientSocket);
-        return 0;
+    int clientSocket = 0;
+    struct sockaddr_in serverAddress = {0};
+    int buildstruct = 0;
+    int conn = 0;
+    buildstruct = build_sock_struct(&clientSocket, &serverAddress, port, serverAddress_char);
+    
+    conn = connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+    if (conn == -1){
+        printf("[ERR]: Port closed.\n");
+        return -1;
     } else {
-        strncpy(request, "hello", sizeof(request));
+        // HTTP    
+        if (port == 80){
+            strncpy(request,"GET / HTTP/1.1\r\n\r\n", sizeof(request));
+            
+            printf("[SEND]: %d\n", port);
+            send(clientSocket, request, sizeof(request), 0);
+            if (errno){
+                perror("Send");
+                return -1;
+            }
+            recv(clientSocket, &response, sizeof(response), 0);
+            if (errno){
+                perror("Recv");
+                return -1;
+            }
 
-        printf("[SEND]: %d\n", port);
-        send(clientSocket, request, sizeof(request), 0);
-        if (errno){
-            perror("Send");
-            return -1;
-        }
-        recv(clientSocket, &response, sizeof(response), 0);
-        if (errno){
-            perror("Recv");
-            return -1;
-        }
+            printf("[SERVER]: %s\n", response);
+            close(clientSocket);
+            return 0;
+        } else {
+            strncpy(request, "hello", sizeof(request));
 
-        printf("[SERVER]: %s\n", response);
-        close(clientSocket);
-    }
+            printf("[SEND]: %d\n", port);
+            send(clientSocket, request, sizeof(request), 0);
+            if (errno){
+                perror("Send");
+                return -1;
+            }
+            recv(clientSocket, &response, sizeof(response), 0);
+            if (errno){
+                perror("Recv");
+                return -1;
+            }
+
+            printf("[SERVER]: %s\n", response);
+            close(clientSocket);
+        }     
+    } 
 }
 
 int build_sock_struct(int * clientSocketOut, struct sockaddr_in * AddressOut, int port, char * address){
@@ -101,7 +112,8 @@ int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * si
     }
     int j = 0;
     int conn = 0;
-
+    int *temp = NULL;
+    
     if (lastPort > 0){
         for (int i = firstPort; i <= lastPort; i++){
             // Open Socket for each attempt, close the socket independently of the result.
@@ -114,14 +126,12 @@ int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * si
                 errno = 0;
             } else {
                 if (j > 0){
-                    int *temp = openPorts;
+                    temp = openPorts;
                     openPorts = realloc(openPorts, (j+1) * sizeof(int));
                     if (!openPorts){
                         printf("The reallocation unexpectedly failed.\n");
                         openPorts = temp;
-                    } else {
-                        free(temp);
-                    }
+                    } 
                 }
                 openPorts[j] = i;
                 j++;
@@ -141,6 +151,7 @@ int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * si
             printf("[OPEN]: %d\n", firstPort);
         }
         close(clientSocket);
+        free(temp);
     }
     *sizeOut = j;
     return openPorts;
