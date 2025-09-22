@@ -20,10 +20,12 @@ int main(int argc, char * argv[]){
     char *portC;
     bool isPortRange = false;
     bool isVerbose = false;
+    bool sendRequest = false;
 
     static struct option long_options[] = {
     { "help", 0, NULL, 'h' },
     { "range", 2, NULL, 'r' },
+    { "send", 0, NULL,  's' },
     { 0, 0, 0, 0}};
 
 
@@ -43,6 +45,10 @@ int main(int argc, char * argv[]){
                 break;
             case 'v':
                 isVerbose = true;
+                break;
+            case 's':
+                sendRequest = true;
+                break;
             case '?':
                 break;
 
@@ -98,9 +104,11 @@ int main(int argc, char * argv[]){
         }
         
         // Sending Requests
-        for (int i = 0; i < sizeOut; i++){
-            int request = 0;
-            request = send_request(addressC, openPorts[i]);
+        if (sendRequest == true){
+            for (int i = 0; i < sizeOut; i++){
+                int request = 0;
+                request = send_request(addressC, openPorts[i]);
+            }
         }
    
         // Cleanup

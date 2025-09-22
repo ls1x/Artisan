@@ -22,8 +22,8 @@ void print_help(char * argv[]){
     printf("%s [-h], [--help]: Prints this.\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <PORT>]: Scans selected TCP port.\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <PORT>] [-v]: Verbose Scan.\n", argv[0]);
+    printf("%s [-t <TARGET>] [-p <PORT>] [--send]: Send request to open ports (Try to grab banner).\n");
     printf("%s [-t <TARGET>] [-p <START-END>] [--range]: Scans selected range of TCP ports.\n", argv[0]);
-
 }
 
 int send_request(char * serverAddress_char, int port){
@@ -33,7 +33,15 @@ int send_request(char * serverAddress_char, int port){
     struct sockaddr_in serverAddress = {0};
     int buildstruct = 0;
     int conn = 0;
+   
+    // Build Socket Struct
     buildstruct = build_sock_struct(&clientSocket, &serverAddress, port, serverAddress_char);
+
+    // Setting timeout
+    struct timeval timeout = {0};
+    timeout.tv_sec = 5; // Seconds
+    timeout.tv_usec = 0;
+    setsockopt(clientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     
     conn = connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
     if (conn == -1){
