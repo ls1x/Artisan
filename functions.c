@@ -22,7 +22,7 @@ void print_help(char * argv[]){
     printf("%s [-h], [--help]: Prints this.\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <PORT>]: Scans selected TCP port.\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <PORT>] [-v]: Verbose Scan.\n", argv[0]);
-    printf("%s [-t <TARGET>] [-p <PORT>] [--send]: Send request to open ports (Try to grab banner).\n");
+    printf("%s [-t <TARGET>] [-p <PORT>] [--send]: Send request to open ports (Try to grab banner).\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <START-END>] [--range]: Scans selected range of TCP ports.\n", argv[0]);
 }
 

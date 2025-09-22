@@ -23,9 +23,11 @@ To compile the project, use `gcc`:
 - `gcc main.c functions.c -o artisan`
 
 ### Usage
-- `./Artisan.out [-h], [--help]: Prints this.`
-- `./Artisan.out [-t <TARGET>] [-p <PORT>]: Scans selected TCP port.`
-- `./Artisan.out [-t <TARGET>] [-p <PORT>] [-v]: Verbose Scan.`
-- `./Artisan.out [-t <TARGET>] [-p <PORT>] [--send]: Send request to open ports (Try to grab banner).`
-- `./Artisan.out [-t <TARGET>] [-p <START-END>] [--range]: Scans selected range of TCP ports.`
-
+```
+Artisan - TCP Port Scanner
+./Artisan.out [-h], [--help]: Prints this.
+./Artisan.out [-t <TARGET>] [-p <PORT>]: Scans selected TCP port.
+./Artisan.out [-t <TARGET>] [-p <PORT>] [-v]: Verbose Scan.
+./Artisan.out [-t <TARGET>] [-p <PORT>] [--send]: Send request to open ports (Try to grab banner).
+./Artisan.out [-t <TARGET>] [-p <START-END>] [--range]: Scans selected range of TCP ports.
+```
