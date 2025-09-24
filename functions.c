@@ -149,6 +149,8 @@ int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * si
             close(clientSocket);
         }
     } else {
+        // Open Socket for each attempt, close the socket independently of the result.
+        buildstruct = build_sock_struct(&clientSocket, &serverAddress, firstPort, serverAddress_char);
         conn = connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
         if (conn == -1){
             printf("[CLOSED/FILTERED]: %d\n", firstPort);
