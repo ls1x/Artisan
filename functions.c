@@ -24,6 +24,7 @@ void print_help(char * argv[]){
     printf("%s [-t <TARGET>] [-p <PORT>] [-v]: Verbose Scan.\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <PORT>] [--send]: Send request to open ports (Try to grab banner).\n", argv[0]);
     printf("%s [-t <TARGET>] [-p <START-END>] [--range]: Scans selected range of TCP ports.\n", argv[0]);
+    printf("%s [-t <TARGET>] [-p <START-END>] [--range] [--ms]: Define custom value for miliseconds per request.\n", argv[0]);
 }
 
 int send_request(char * serverAddress_char, int port){
@@ -110,7 +111,7 @@ void sleep_ms (int ms){
     usleep(ms * 1000);
 }
 
-int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * sizeOut, bool isVerbose){
+int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * sizeOut, bool isVerbose, int sleepMs){
     int clientSocket = 0;
     struct sockaddr_in serverAddress = {0};
     int buildstruct = 0;
@@ -146,6 +147,9 @@ int * port_scan(char * serverAddress_char, int firstPort, int lastPort, int * si
                 printf("[OPEN]: %d\n", i);
             }
             // Sleep Here
+            sleep_ms(sleepMs);
+            
+            // Cleanup
             close(clientSocket);
         }
     } else {

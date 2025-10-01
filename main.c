@@ -17,15 +17,17 @@
 int main(int argc, char * argv[]){
     int c = 0;
     char *addressC = NULL;
-    char *portC;
+    char *portC = NULL;
+    char *sleepMs = NULL;
     bool isPortRange = false;
     bool isVerbose = false;
     bool sendRequest = false;
 
     static struct option long_options[] = {
-    { "help", 0, NULL, 'h' },
-    { "range", 2, NULL, 'r' },
-    { "send", 0, NULL,  's' },
+    { "help",  0, NULL,  'h' },
+    { "range", 0, NULL,  'r' },
+    { "send",  0, NULL,  's' },
+    { "ms",    0, NULL,  'm'},
     { 0, 0, 0, 0}};
 
 
@@ -49,6 +51,9 @@ int main(int argc, char * argv[]){
             case 's':
                 sendRequest = true;
                 break;
+            case 'm':
+                sleepMs = optarg;
+                break;
             case '?':
                 break;
 
@@ -61,6 +66,7 @@ int main(int argc, char * argv[]){
         int port[2] = {0};
         int *openPorts = NULL;
         int sizeOut = 0;
+        int miliseconds = 0;
         char * strtoked_port = NULL;
         char *endptr = NULL;
         
@@ -90,8 +96,15 @@ int main(int argc, char * argv[]){
                 printf("[ERR]: Ports cannot be higher than 65535.\n");
                 return -1;
             }
+            // Converting sleepMs
+            if (sleepMs){
+                miliseconds = strtol(sleepMs, &endptr, 10);
+                if (errno != 0){
+                    printf("[ERR]: Invalid number of miliseconds.\n");
+                }
+            }
             // Scan the range of ports
-            openPorts = port_scan(addressC, port[0], port[1], &sizeOut, isVerbose);
+            openPorts = port_scan(addressC, port[0], port[1], &sizeOut, isVerbose, miliseconds);
         } else {
             port[0] = strtol(portC, &endptr, 10);
             if (errno != 0){
@@ -100,7 +113,7 @@ int main(int argc, char * argv[]){
                 return -1;
             }
             // Scan a single port
-            openPorts = port_scan(addressC, port[0], port[1], &sizeOut, isVerbose);
+            openPorts = port_scan(addressC, port[0], port[1], &sizeOut, isVerbose, 0);
         }
         
         // Sending Requests
